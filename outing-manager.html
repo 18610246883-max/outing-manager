@@ -116,9 +116,31 @@ th{background:#f5f7fa;font-weight:500}
 .task-filter .tf-btn.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
 .toast.show{opacity:1}
+
+.login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a3a5c,#2d6a9f);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.login-overlay.hidden{display:none}
+.login-box{background:#fff;border-radius:16px;padding:30px 24px;width:90%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-box h2{font-size:20px;color:#1a3a5c;margin-bottom:6px}
+.login-box .sub{font-size:12px;color:#999;margin-bottom:20px}
+.login-box input{width:100%;padding:12px 16px;border:2px solid #e8e8e8;border-radius:10px;font-size:16px;text-align:center;font-family:inherit;outline:none;transition:border 0.2s}
+.login-box input:focus{border-color:#1a3a5c}
+.login-box .err{color:#ff4d4f;font-size:12px;margin-top:8px;display:none}
+.login-box .btn-login{width:100%;padding:12px;background:#1a3a5c;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;margin-top:16px;cursor:pointer;font-family:inherit}
+.login-box .btn-login:active{opacity:0.8}
 </style>
 </head>
 <body>
+
+<div class="login-overlay" id="loginOverlay">
+<div class="login-box">
+<div style="font-size:48px;margin-bottom:10px">🏔️</div>
+<h2>诺达思 Summer Outing</h2>
+<div class="sub">请输入密码进入</div>
+<input type="password" id="loginPwd" placeholder="输入密码" autocomplete="off">
+<div class="err" id="loginErr">密码错误，请重试</div>
+<button class="btn-login" onclick="checkLogin()">进入</button>
+</div>
+</div>
 <div class="header">
 <div><h1>诺达思 2026 Summer Outing · 山西</h1>
 <div style="font-size:12px;opacity:0.8;margin-top:4px">8月9日-19日 | 北京→太原→郑州 | 约30人</div></div>
@@ -333,6 +355,11 @@ function installApp(){if(window.deferredPrompt){window.deferredPrompt.prompt();w
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.deferredPrompt=e;document.getElementById('installBanner').classList.add('show');});
 window.addEventListener('appinstalled',function(){document.getElementById('installBanner').classList.remove('show');showToast('✅ 应用已安装！');});
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').then(function(){console.log('SW registered');}).catch(function(){console.log('SW failed');});}
+
+async function sha256(str){var buf=new TextEncoder().encode(str);var hash=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');}
+function checkLogin(){var pwd=document.getElementById('loginPwd').value;sha256(pwd).then(function(h){if(h==='c64ddde4d1280e7f497d72d52e6456affab1625bf7f2adee6ebf6e7f43a51b4f'){document.getElementById('loginOverlay').classList.add('hidden');document.getElementById('loginPwd').value='';}else{document.getElementById('loginErr').style.display='block';document.getElementById('loginPwd').value='';}});}
+document.getElementById('loginPwd').addEventListener('keydown',function(e){if(e.key==='Enter')checkLogin();});
+
 renderAll();
 setInterval(function(){document.getElementById('countdown').textContent=countdownStr();checkNotify();updateBadge();},30000);
 </script>
