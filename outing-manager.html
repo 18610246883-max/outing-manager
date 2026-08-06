@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Outing管理">
+<meta name="theme-color" content="#1a3a5c">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231a3a5c%22/><text x=%2250%25%22 y=%2255%25%22 text-anchor=%22middle%22 dy=%22.1em%22 fill=%22white%22 font-size=%2245%22>🏔️</text></svg>">
+<title>诺达思 2026 Summer Outing</title>
+<link rel="manifest" href="./manifest.json">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#f0f2f5;color:#333}
+.header{background:linear-gradient(135deg,#1a3a5c,#2d6a9f);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.header h1{font-size:18px}
+.header .cd{font-size:13px;background:rgba(255,255,255,0.15);padding:6px 14px;border-radius:20px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e8e8e8;overflow-x:auto;position:sticky;top:0;z-index:10}
+.tab{padding:12px 18px;cursor:pointer;font-size:14px;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;color:#666}
+.tab:hover{color:#1a3a5c}
+.tab.active{color:#1a3a5c;border-bottom-color:#1a3a5c;font-weight:600}
+.content{padding:16px;max-width:1200px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card h3{font-size:16px;margin-bottom:10px;color:#1a3a5c;display:flex;align-items:center;gap:6px}
+.day-card{border-left:4px solid #2d6a9f;padding-left:14px}
+.day-card.training{border-left-color:#e8a838}
+.day-card.travel{border-left-color:#52c41a}
+.day-card.return-day{border-left-color:#ff4d4f}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;margin-right:4px}
+.tag.train{background:#fff7e6;color:#d48806}
+.tag.tour{background:#f6ffed;color:#389e0d}
+.tag.meeting{background:#e6f7ff;color:#096dd9}
+.tag.meal{background:#fff0f6;color:#c41d7f}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.task-item:last-child{border-bottom:none}
+.task-check{width:20px;height:20px;border:2px solid #d9d9d9;border-radius:50%;cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:12px}
+.task-check.done{background:#52c41a;border-color:#52c41a;color:#fff}
+.task-check.overdue{border-color:#ff4d4f}
+.task-info{flex:1}
+.task-title{font-size:14px;font-weight:500}
+.task-time{font-size:12px;color:#999;margin-top:2px}
+.btn{padding:4px 12px;border-radius:6px;border:1px solid #d9d9d9;background:#fff;cursor:pointer;font-size:12px;transition:all 0.2s;font-family:inherit}
+.btn:hover{opacity:0.85}
+.btn-primary{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
+.btn-success{background:#52c41a;color:#fff;border-color:#52c41a}
+.btn-warning{background:#fa8c16;color:#fff;border-color:#fa8c16}
+.btn-sm{padding:2px 8px;font-size:11px}
+.meal-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap}
+.meal-row:last-child{border-bottom:none}
+.meal-day{font-size:13px;font-weight:600;color:#1a3a5c;min-width:80px}
+.meal-type{font-size:12px;color:#999;min-width:30px}
+.meal-restaurant{font-size:13px;flex:1;min-width:140px}
+.meal-cost{display:flex;align-items:center;gap:6px}
+.meal-cost input{width:80px;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;font-family:inherit}
+.meal-cost input:focus{outline:none;border-color:#1a3a5c}
+.notification-box{background:#f9f9f9;border-radius:8px;padding:12px 36px 12px 12px;font-size:13px;line-height:1.8;white-space:pre-wrap;margin:8px 0;position:relative}
+.copy-btn{position:absolute;top:8px;right:8px}
+.invoice-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 30px rgba(0,0,0,0.15);z-index:100;max-width:420px;width:90%}
+.invoice-popup h3{font-size:16px;margin-bottom:14px}
+.invoice-popup .field{margin-bottom:10px}
+.invoice-popup .label{font-size:12px;color:#999;margin-bottom:2px}
+.invoice-popup .value{font-size:14px;background:#f5f5f5;padding:8px 12px;border-radius:6px;word-break:break-all;user-select:all}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:99}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.summary-item{background:#f5f7fa;padding:12px;border-radius:8px;text-align:center}
+.summary-item .num{font-size:24px;font-weight:700;color:#1a3a5c}
+.summary-item .lbl{font-size:12px;color:#999;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid #e8e8e8;padding:8px 10px;text-align:left}
+th{background:#f5f7fa;font-weight:500}
+.location-link{color:#2d6a9f;text-decoration:none;font-size:12px;margin-left:6px;cursor:pointer}
+.location-link:hover{text-decoration:underline}
+.dish-list{font-size:12px;color:#666;margin-top:4px}
+.reminder-badge{background:#ff4d4f;color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px}
+.notify-toggle{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px}
+.switch{position:relative;width:44px;height:24px;background:#d9d9d9;border-radius:12px;cursor:pointer;transition:background 0.3s}
+.switch.on{background:#52c41a}
+.switch::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:2px;left:2px;transition:left 0.3s}
+.switch.on::after{left:22px}
+
+@media(max-width:768px){
+  .header h1{font-size:15px}.header{padding:10px 14px}
+  .tab{padding:10px 10px;font-size:12px;flex-shrink:0}
+  .meal-row{flex-direction:column;align-items:flex-start}
+  .content{padding:10px;padding-bottom:80px}
+  .card{padding:12px;border-radius:8px}
+  .summary-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .summary-item .num{font-size:20px}
+  table{font-size:11px}
+  th,td{padding:6px 4px}
+}
+.install-banner{display:none;background:linear-gradient(135deg,#1a3a5c,#2d6a9f);color:#fff;padding:10px 14px;align-items:center;gap:10px;font-size:13px;position:sticky;top:0;z-index:11}
+.install-banner.show{display:flex}
+.install-banner .ib-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 4px;opacity:0.7}
+.install-banner .ib-btn{background:#fff;color:#1a3a5c;border:none;padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e8e8e8;z-index:20;padding:6px 0 env(safe-area-inset-bottom,6px);justify-content:space-around}
+@media(max-width:768px){
+  .bottom-nav{display:flex}
+  .tabs.desktop-tabs{display:none}
+}
+@media(min-width:769px){
+  .bottom-nav{display:none}
+  .tabs.desktop-tabs{display:flex}
+}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 8px;cursor:pointer;font-size:10px;color:#999;min-width:48px;border:none;background:none;font-family:inherit}
+.bottom-nav-item.active{color:#1a3a5c;font-weight:600}
+.bottom-nav-item .bni-icon{font-size:20px}
+.bottom-nav-item .bni-badge{background:#ff4d4f;color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;position:absolute;top:0;right:2px;min-width:16px;text-align:center}
+.task-filter{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.task-filter .tf-btn{padding:4px 10px;border-radius:12px;border:1px solid #d9d9d9;background:#fff;cursor:pointer;font-size:11px;font-family:inherit;transition:all 0.2s}
+.task-filter .tf-btn.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="header">
+<div><h1>诺达思 2026 Summer Outing · 山西</h1>
+<div style="font-size:12px;opacity:0.8;margin-top:4px">8月9日-19日 | 北京→太原→郑州 | 约30人</div></div>
+<div class="cd" id="countdown">加载中...</div>
+</div>
+<div class="install-banner" id="installBanner"><span>📲</span><span style="flex:1">添加到手机主屏幕，随时随地管理团建</span><button class="ib-btn" onclick="installApp()">立即添加</button><button class="ib-close" onclick="document.getElementById('installBanner').classList.remove('show')">&times;</button></div>
+<div class="tabs desktop-tabs">
+<div class="tab active" onclick="switchTab(0)">总览</div>
+<div class="tab" onclick="switchTab(1)">任务提醒</div>
+<div class="tab" onclick="switchTab(2)">用餐管理</div>
+<div class="tab" onclick="switchTab(3)">发票汇总</div>
+<div class="tab" onclick="switchTab(4)">群通知</div>
+<div class="tab" onclick="switchTab(5)">人员名单</div>
+</div>
+<div class="content">
+<div class="panel active" id="panel-0"></div>
+<div class="panel" id="panel-1"></div>
+<div class="panel" id="panel-2"></div>
+<div class="panel" id="panel-3"></div>
+<div class="panel" id="panel-4"></div>
+<div class="panel" id="panel-5"></div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+<div class="bottom-nav-item active" onclick="switchTab(0)" style="position:relative"><span class="bni-icon">📊</span>总览</div>
+<div class="bottom-nav-item" onclick="switchTab(1)" style="position:relative"><span class="bni-icon">✅</span>任务<span class="bni-badge" id="taskBadge" style="display:none">0</span></div>
+<div class="bottom-nav-item" onclick="switchTab(2)" style="position:relative"><span class="bni-icon">🍽️</span>用餐</div>
+<div class="bottom-nav-item" onclick="switchTab(3)" style="position:relative"><span class="bni-icon">🧾</span>发票</div>
+<div class="bottom-nav-item" onclick="switchTab(4)" style="position:relative"><span class="bni-icon">📢</span>通知</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay" style="display:none" onclick="closeInvoice()"></div>
+<div class="invoice-popup" id="invoicePopup" style="display:none"></div>
+<script>
+const C={name:'诺达思（北京）信息技术有限责任公司',taxId:'911101055621448587',email:'jingyun.sun@noldus.com.cn'};
+const days=[
+{date:'2026-08-09',dow:'周日',label:'Day1·抵达太原',type:'travel',icon:'🚄',desc:'北京丰台站→太原南站',detail:'G683 12:38-15:45 | 14车 | 17人\n16:00 大巴接站→兰欧国际酒店\n18:00 集体晚餐：老太原菜馆（南宫店）二楼鼓楼街厅',hotel:'兰欧国际酒店(太原迎泽大街山西医科大学店)',hotelAddr:'山西太原迎泽区新建南路8号',meals:[{type:'晚',time:'18:00',restaurant:'老太原菜馆（南宫店）',location:'太原市迎泽区南宫',dishes:'手撕熏鸡69、藜麦果蔬大拌菜48、米醋炝脆藕29、什锦铜火锅128、绝味鱼头238、过油肉46、罐焖羊肉198、口袋碎碎牛肉78、汾酒火焰土豆39、翡翠笋核桃49、浓汤时蔬49',budget:3000}]},
+{date:'2026-08-10',dow:'周一',label:'Day2·内部培训',type:'training',icon:'📚',desc:'全天培训@兰欧国际酒店',detail:'8:30-10:00 公司财年总结+明年计划+形势分析（王承芳）\n10:30-11:30 AI讲座：郝培强\n13:30-17:50 AI应用成果展示（杨朋翰主持）',hotel:'兰欧国际酒店(太原迎泽大街山西医科大学店)',hotelAddr:'山西太原迎泽区新建南路8号',meals:[{type:'午',time:'12:00',restaurant:'酒店自助餐',location:'兰欧国际酒店',dishes:'自助',budget:2040},{type:'晚',time:'18:00',restaurant:'夜市/小吃街（自由用餐）',location:'太原食品街/柳巷',dishes:'自由选择',budget:0}]},
+{date:'2026-08-11',dow:'周二',label:'Day3·内部培训',type:'training',icon:'📚',desc:'全天培训@兰欧国际酒店',detail:'8:30-9:30 十年分享：赵杰、王冬（宁宁主持）\n10:00-12:00 新人分享：于晓菲、王秋杨、周峰、黄金风\n13:30-15:00 技术分析（白须辉主持）\n15:30-16:30 新产品销售方案\n16:30-18:00 部门会议',hotel:'兰欧国际酒店(太原迎泽大街山西医科大学店)',hotelAddr:'山西太原迎泽区新建南路8号',meals:[{type:'午',time:'12:00',restaurant:'酒店自助餐',location:'兰欧国际酒店',dishes:'自助',budget:2040},{type:'晚',time:'18:30',restaurant:'御河伍号（水西关店）',location:'太原市水西关',dishes:'包间202/203/205',budget:3000}]},
+{date:'2026-08-12',dow:'周三',label:'Day4·太原游览',type:'tour',icon:'🏛',desc:'山西省博物院+晋祠+天龙山',detail:'8:30 集合出发山西省博\n9:00-12:00 参观（讲解+自由活动）\n12:00-13:00 午餐\n13:00-13:30 前往晋祠天龙山\n13:30-18:00 游览晋祠+天龙山\n18:30-19:30 晚餐',hotel:'兰欧国际酒店(太原迎泽大街山西医科大学店)',hotelAddr:'山西太原迎泽区新建南路8号',meals:[{type:'午',time:'12:00',restaurant:'咱柒哥醋鱼（晋祠路店）',location:'太原市晋祠路',dishes:'平阳/尧都/华门包间 500定金',budget:3000},{type:'晚',time:'18:30',restaurant:'最爱妈妈菜（南海街店）',location:'太原市南海街',dishes:'韶九巷/傅家巷包间',budget:3000}]},
+{date:'2026-08-13',dow:'周四',label:'Day5·平遥+晋中',type:'tour',icon:'🏯',desc:'平遥古城+王家大院',detail:'8:00-9:30 前往平遥古城\n9:40-12:30 游览平遥古城\n12:30-13:30 午餐\n13:30-14:30 自由活动\n14:30-15:30 前往王家大院\n15:40-17:30 游览王家大院\n18:00-19:00 晚餐',hotel:'美豪丽致酒店(晋中灵石店)',hotelAddr:'晋中市灵石县新建东街197号',meals:[{type:'午',time:'12:30',restaurant:'百膳囍饭店',location:'平遥古城附近',dishes:'半开包间3桌（12:30必须到）',budget:3000},{type:'晚',time:'18:00',restaurant:'王家味道（王家大院店）',location:'灵石县王家大院附近',dishes:'666888包间 15人*2',budget:3000}]},
+{date:'2026-08-14',dow:'周五',label:'Day6·晋中游览',type:'tour',icon:'⛰',desc:'绵山风景区+张壁古堡',detail:'8:30-9:00 前往绵山\n9:00-12:30 游览绵山（小交通√）\n13:00-14:00 午餐\n14:00-14:30 前往张壁古堡\n14:30-17:00 游览（讲解√）\n17:00-18:30 前往洪洞县\n18:30 酒店入住',hotel:'汉庭优佳酒店(洪洞大槐树文化广场店)',hotelAddr:'洪洞县大槐树镇虹通南路新城中心三期9号楼',meals:[{type:'午',time:'13:00',restaurant:'晋昇饭庄(王家大院店)',location:'灵石县王家大院附近',dishes:'宴会厅3桌',budget:3000},{type:'晚',time:'18:50',restaurant:'同乐门',location:'洪洞县',dishes:'祥和厅/平安阁/如意厅 300定金 司导餐：面2份+凉菜',budget:3000}]},
+{date:'2026-08-15',dow:'周六',label:'Day7·临汾游览',type:'tour',icon:'🌳',desc:'洪洞大槐树+广胜寺+尧庙',detail:'9:00-9:20 前往洪洞大槐树\n9:30-12:30 游览（讲解√ 精华演出）\n12:30-13:30 午餐\n13:30-14:00 前往广胜寺\n14:00-16:00 游览（讲解√ 小交通√）\n16:00-17:00 前往尧庙\n17:00-18:00 游览\n18:30-19:30 晚餐',hotel:'临汾万达悦华酒店',hotelAddr:'临汾市滨河路辅路256号',meals:[{type:'午',time:'12:30',restaurant:'老洪洞（十里香大槐树店）',location:'洪洞县大槐树附近',dishes:'301/302/303包间 司导餐：面2份+凉菜',budget:3000},{type:'晚',time:'18:30',restaurant:'马氏老地方（中大街）',location:'临汾市中大街',dishes:'晋城厅/长治厅/运城厅',budget:3000}]},
+{date:'2026-08-16',dow:'周日',label:'Day8·晋城游览',type:'tour',icon:'🏰',desc:'皇城相府+湘峪古堡',detail:'8:30-12:00 前往皇城相府（约2.5h）\n12:00-13:00 午餐\n13:00-15:00 游览皇城相府（讲解√ 小交通√）\n15:00-15:30 前往湘峪古堡\n15:30-18:00 游览（讲解√）\n18:00-19:00 前往餐厅\n19:00-20:00 晚餐',hotel:'晋城阳光丽呈酒店',hotelAddr:'晋城市城区泽州路568号',meals:[{type:'午',time:'12:00',restaurant:'皇城相府贵宾楼',location:'晋城市皇城相府景区',dishes:'清立堂/集益堂包间',budget:3000},{type:'晚',time:'19:00',restaurant:'泽州宴（司徒小镇店）',location:'晋城市司徒小镇',dishes:'1号宴会厅3桌 500定 司导餐：清汤饸饹2份',budget:3000}]},
+{date:'2026-08-17',dow:'周一',label:'Day9·辉县游览',type:'tour',icon:'🏞',desc:'八里沟景区（桃花湾+天河瀑布+红石河）',detail:'8:00-11:00 前往八里沟（约2h）\n12:30-13:30 午餐\n13:30-17:00 游览八里沟（小交通√）\n17:00-18:00 前往酒店入住\n18:30 晚餐',hotel:'辉县美豪怡致酒店(时代商业广场店)',hotelAddr:'辉县胡桥街道共和路与七贤大道交叉口西南角',meals:[{type:'午',time:'12:30',restaurant:'瀑见度假酒店（八里沟店）',location:'八里沟景区内',dishes:'3层餐厅3桌',budget:3000},{type:'晚',time:'18:30',restaurant:'广顺兴（辉县店）',location:'辉县市区',dishes:'顺德厅/广州厅/清远厅/湛江厅 500定 7人*2+8人*2',budget:3000}]},
+{date:'2026-08-18',dow:'周二',label:'Day10·天界山+郑州',type:'tour',icon:'🏔',desc:'天界山风景区+九莲山→郑州',detail:'8:30-9:30 前往天界山\n9:30-12:00 游览（回龙挂壁公路+云峰画廊）\n12:30-13:30 午餐\n13:30-15:50 游览九莲山\n16:00-18:00 前往郑州（约2h）\n19:00 晚餐',hotel:'美豪丽致酒店（郑东万象城店）',hotelAddr:'郑州金水区金水东路80号绿地新都会4号楼',meals:[{type:'午',time:'12:30',restaurant:'青谷里（农家菜）',location:'天界山附近',dishes:'大厅4桌',budget:3000},{type:'晚',time:'19:00',restaurant:'裕丰源·豫食雅宴',location:'郑州市郑东新区',dishes:'320/321/322包间',budget:3000}]},
+{date:'2026-08-19',dow:'周三',label:'Day11·返程',type:'return',icon:'🔙',desc:'郑州→北京',detail:'7:30 集合出发→郑州东站\nG374 9:03-11:30 郑州东→北京西\n11:40 北京西站接站，送回公司\n外地同事各自返程',hotel:'-',hotelAddr:'',meals:[{type:'午',time:'',restaurant:'无餐（火车上自理）',location:'',dishes:'',budget:0}]}
+];
+const trainOut={date:'8月9日',from:'北京丰台站',to:'太原南站',time:'12:38-15:45',train:'G683',gate:'31B',car:'14车',people:['张玉凤','李伟光','王承芳','黄金风','魏乾栋','刘嘉伦','李利芳','阚凤娇','赵杰','杜雪妍','于晓菲','宁宁','王秋扬','周峰','曲若衡','孙静云','杨朋翰']};
+const trainBack={date:'8月19日',from:'郑州东站',to:'北京西站',time:'9:03-11:30',train:'G374',people:['白须辉','杨朋翰','王承芳','赵杰','张玉凤','宁宁','魏乾栋','黄金风','李伟光','周峰','刘嘉伦','曲若衡','王秋扬','于晓菲','杜雪妍','孙静云']};
+const hotelRooms={men:['王承芳','申凯 白须辉','李康伟 刘嘉伦','李伟光 赵波','杨朋翰 王秋扬','胡为尚 王冬','林怀蔚 张顺','吴文豪 周峰','费华佳 陆志强','魏乾栋 黄金风','程能 岳元冀','曲若衡'],women:['张玉凤 赵杰','李利芳 阚凤娇','杜雪妍 于晓菲','宁宁 孙静云']};
+let tasks=JSON.parse(localStorage.getItem('ot')||'null')||generateTasks();
+let invoices=JSON.parse(localStorage.getItem('oi')||'[]');
+let mealCosts=JSON.parse(localStorage.getItem('om')||'{}');
+let notifyOn=JSON.parse(localStorage.getItem('on')||'true');
+function generateTasks(){
+var t=[],add=function(d,ti,ca,de){t.push({id:'t'+t.length,date:d,title:ti,cat:ca,detail:de,done:false,notified:false});};
+add('2026-08-05','确认火车票已分发到每位同事','车票','检查北京→太原G683和郑州→北京G374车票分发情况');
+add('2026-08-06','确认所有酒店预订（8家酒店）','酒店','逐一确认：兰欧国际、美豪丽致灵石、汉庭优佳洪洞、万达悦华临汾、阳光丽呈晋城、美豪怡致辉县、美豪丽致郑州');
+add('2026-08-06','确认所有餐厅预订（19餐）','餐厅','逐一电话确认包间、到店时间、司导餐安排');
+add('2026-08-07','发送Outing通知给全体员工','通知','使用【模板】Outing通知，包含行程安排、车次信息、注意事项、携带物品清单');
+add('2026-08-07','确认团服、物料准备完毕','物资','团服两套（选两个景点拍照）、10周年礼物、雨衣、矿泉水（30人*2瓶/天）');
+add('2026-08-08','发送出行前最后提醒','通知','8:30集合、北京丰台站31B检票口、G683 12:38出发、天气提醒、身份证必带');
+add('2026-08-08','确认太原接站大巴（16:00）','交通','与导游确认大巴车牌号、司机电话、接站位置');
+add('2026-08-09','早上：出发前群通知','通知','发送出发提醒：8:30北京丰台站31B检票口，G683 12:38→太原南15:45，14车，身份证必带！');
+add('2026-08-09','中午：与老太原菜馆确认上菜时间','餐厅沟通','电话确认晚上18:00到店，3桌包间，提前上凉菜');
+add('2026-08-09','到达太原后：确认大巴接站','交通','联系导游确认大巴已到位，清点人数，前往酒店');
+add('2026-08-10','早上：发送培训日程群通知','通知','培训日程：8:30公司总结→10:30 AI讲座→13:30 AI成果展示');
+add('2026-08-10','中午：确认酒店自助午餐','餐厅沟通','与酒店确认自助午餐准时12:00开始，30人份');
+add('2026-08-10','下午：确认第二天培训场地和茶歇','会务','确认会议室设备、投影、茶歇安排');
+add('2026-08-11','早上：发送培训日程群通知','通知','培训日程：8:30十年分享→10:00新人分享→13:30技术分析→16:30部门会议');
+add('2026-08-11','中午：与御河伍号确认晚宴上菜','餐厅沟通','确认18:30到店，包间202/203/205，确认菜单');
+add('2026-08-11','下午：确认明天旅游大巴和导游','交通','与导游确认8:30集合出发，确认车牌号、导游电话');
+add('2026-08-12','早上：发送行程群通知','通知','8:30出发→山西省博9:00-12:00→晋祠13:30-18:00，穿团服！带水！');
+add('2026-08-12','上午：与咱柒哥醋鱼确认午餐上菜','餐厅沟通','确认12:00到店，3桌，提前沟通菜品，确保12:30前上齐');
+add('2026-08-12','下午：与最爱妈妈菜确认晚餐上菜','餐厅沟通','确认18:30到店，包间韶九巷/傅家巷');
+add('2026-08-13','早上：发送行程群通知','通知','8:00出发→平遥古城9:40-12:30→王家大院15:40-17:30，注意防晒！');
+add('2026-08-13','上午：与百膳囍饭店确认12:30准时到','餐厅沟通','强调12:30必须到店，3桌半开包间，提前上菜');
+add('2026-08-13','下午：与王家味道确认晚餐','餐厅沟通','确认18:00到店，包间666888，2桌各15人');
+add('2026-08-14','早上：发送行程群通知','通知','8:30出发→绵山9:00-12:30→张壁古堡14:30-17:00→洪洞县，穿舒适鞋子！');
+add('2026-08-14','上午：与晋昇饭庄确认午餐','餐厅沟通','确认13:00到店，宴会厅3桌');
+add('2026-08-14','下午：与同乐门确认晚餐+司导餐','餐厅沟通','确认18:50到店，祥和厅/平安阁/如意厅，司导餐：面2份+凉菜');
+add('2026-08-15','早上：发送行程群通知','通知','9:00出发→大槐树9:30-12:30→广胜寺14:00-16:00→尧庙17:00-18:00');
+add('2026-08-15','上午：与老洪洞确认午餐','餐厅沟通','确认12:30到店，301/302/303包间，司导餐：面2份+凉菜');
+add('2026-08-15','下午：与马氏老地方确认晚餐','餐厅沟通','确认18:30到店，晋城厅/长治厅/运城厅');
+add('2026-08-16','早上：发送行程群通知','通知','8:30出发→皇城相府（2.5h车程）→湘峪古堡，车程较长，备好零食水！');
+add('2026-08-16','上午：与皇城相府贵宾楼确认午餐','餐厅沟通','确认12:00到店，清立堂/集益堂包间，提前上菜（长途后直接用餐）');
+add('2026-08-16','下午：与泽州宴确认晚餐','餐厅沟通','确认19:00到店，1号宴会厅3桌，500定金已付，司导餐：清汤饸饹2份');
+add('2026-08-17','早上：发送行程群通知','通知','8:00出发→八里沟（2h车程）→桃花湾+天河瀑布+红石河，穿运动鞋！');
+add('2026-08-17','上午：与瀑见度假酒店确认午餐','餐厅沟通','确认12:30到店，3层餐厅3桌');
+add('2026-08-17','下午：与广顺兴确认晚餐','餐厅沟通','确认18:30到店，顺德厅/广州厅/清远厅/湛江厅，500定金已付');
+add('2026-08-18','早上：发送行程群通知','通知','8:30出发→天界山挂壁公路+云峰画廊→九莲山→16:00前往郑州，今晚打包行李！');
+add('2026-08-18','上午：与青谷里确认午餐','餐厅沟通','确认12:30到店，大厅4桌，农家菜提前准备');
+add('2026-08-18','下午：与裕丰源豫食雅宴确认晚餐','餐厅沟通','确认19:00到店，320/321/322包间，最后一顿聚餐！');
+add('2026-08-18','晚上：确认明天返程安排','交通','确认G374 9:03郑州东→北京西，确认送站车辆、接站车辆');
+add('2026-08-19','早上：发送返程群通知','通知','7:30集合出发→郑州东站 G374 9:03→北京西11:30，外地同事注意各自返程');
+add('2026-08-19','中午：确认全员安全抵达','人员','确认北京同事安全到京，外地同事安全到家，群内报平安');
+return t;}
+function saveTasks(){localStorage.setItem('ot',JSON.stringify(tasks));}
+function saveInvoices(){localStorage.setItem('oi',JSON.stringify(invoices));}
+function saveMealCosts(){localStorage.setItem('om',JSON.stringify(mealCosts));}
+function saveNotify(){localStorage.setItem('on',JSON.stringify(notifyOn));}
+function fmtDate(d){return new Date(d).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});}
+function fullDate(d){return new Date(d).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});}
+function amapLink(k){return 'https://uri.amap.com/search?keyword='+encodeURIComponent(k)+'&callnative=1';}
+function bmapLink(k){return 'https://map.baidu.com/search/'+encodeURIComponent(k);}
+function mealKey(di,mi){return di+'_'+mi;}
+function getToday(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function countdownStr(){
+var start=new Date('2026-08-09T12:38:00'),now=new Date(),diff=start-now;
+if(diff<0){var end=new Date('2026-08-19T11:30:00');if(now>end)return '活动已结束';var left=end-now;return '活动进行中 🔥 距返程还有 '+Math.floor(left/86400000)+' 天';}
+return '距出发还有 '+Math.floor(diff/86400000)+' 天 '+Math.floor((diff%86400000)/3600000)+' 小时';}
+function renderAll(){document.getElementById('countdown').textContent=countdownStr();renderOverview();renderTasks();renderMeals();renderInvoices();renderNotifications();renderPeople();checkNotify();}
+function renderOverview(){
+var h='<div class="card"><h3>活动总览</h3>';
+h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+h+='<span class="tag train">🚄 8/9 北京→太原 G683</span><span class="tag meeting">📚 8/10-11 培训</span><span class="tag tour">🏯 8/12-18 山西深度游</span><span class="tag train">🚄 8/19 郑州→北京 G374</span></div></div>';
+days.forEach(function(d,i){
+var cls=d.type==='training'?'training':d.type==='return'?'return-day':'travel';
+h+='<div class="card day-card '+cls+'"><h3>'+d.icon+' '+d.label+' <span style="font-size:12px;color:#999;font-weight:400">'+d.dow+'</span></h3>';
+h+='<p style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+'</p>';
+h+='<p style="font-size:12px;color:#666;white-space:pre-line;line-height:1.7">'+d.detail+'</p>';
+if(d.hotel&&d.hotel!=='-'){h+='<div style="margin-top:8px;font-size:12px;color:#555">🏨 <b>'+d.hotel+'</b> '+d.hotelAddr+' <a class="location-link" href="'+amapLink(d.hotel+d.hotelAddr)+'" target="_blank">🗺️高德</a> <a class="location-link" href="'+bmapLink(d.hotel+d.hotelAddr)+'" target="_blank">百度</a></div>';}
+if(d.meals.length){h+='<div style="margin-top:6px;font-size:12px;color:#555">';d.meals.forEach(function(m,j){h+='<div>🍽️ <b>'+m.type+'餐 '+m.time+'</b> '+m.restaurant;if(m.location)h+=' <a class="location-link" href="'+amapLink(m.restaurant+' '+m.location)+'" target="_blank">🗺️定位</a>';if(m.budget>0)h+=' <span style="color:#999">预算 ¥'+m.budget.toLocaleString()+'</span>';var mk=mealKey(i,j);if(mealCosts[mk])h+=' <span style="color:#52c41a">实际 ¥'+Number(mealCosts[mk]).toLocaleString()+'</span>';h+='</div>';});h+='</div>';}
+h+='</div>';});
+document.getElementById('panel-0').innerHTML=h;}
+function renderTasks(){
+var today=getToday(),h='<div class="card"><h3>任务提醒清单</h3>';
+h+='<div class="notify-toggle"><div class="switch'+(notifyOn?' on':'')+'" onclick="toggleNotify()"></div><span>桌面通知提醒（'+(notifyOn?'已开启':'已关闭')+'）</span></div>';
+var grouped={};tasks.forEach(function(t){if(!grouped[t.date])grouped[t.date]=[];grouped[t.date].push(t);});
+Object.keys(grouped).sort().forEach(function(d){
+var isPast=d<today,isToday=d===today,items=grouped[d],doneCount=items.filter(function(t){return t.done;}).length,allDone=doneCount===items.length;
+h+='<div style="margin-bottom:8px"><div style="font-size:13px;font-weight:600;color:'+(isToday?'#fa8c16':isPast&&!allDone?'#ff4d4f':'#1a3a5c')+';margin-bottom:4px">📅 '+fullDate(d)+(isToday?' <span class="reminder-badge">今天</span>':'')+(allDone?' <span style="color:#52c41a;font-size:12px"> ✅ 全部完成</span>':'')+'</div>';
+items.forEach(function(t){var cc={'车票':'#d48806','酒店':'#096dd9','餐厅':'#c41d7f','通知':'#389e0d','会务':'#722ed1','物资':'#eb2f96','交通':'#13c2c2','餐厅沟通':'#fa541c','人员':'#2f54eb'},catColor=cc[t.cat]||'#666';
+h+='<div class="task-item"><div class="task-check'+(t.done?' done':'')+(isPast&&!t.done?' overdue':'')+'" onclick="toggleTask(\''+t.id+'\')">'+(t.done?'✓':'')+'</div><div class="task-info"><span class="tag" style="background:'+catColor+'20;color:'+catColor+'">'+t.cat+'</span><span class="task-title">'+t.title+'</span><div class="task-time">'+t.detail+'</div></div></div>';});
+h+='</div>';});
+h+='</div>';document.getElementById('panel-1').innerHTML=h;}
+function renderMeals(){
+var h='<div class="card"><h3>用餐管理 & 开票</h3><p style="font-size:12px;color:#999;margin-bottom:12px">每餐结束后输入实际金额，点击「开票」获取开票信息</p>';
+days.forEach(function(d,di){if(!d.meals.length)return;
+h+='<div style="margin-bottom:6px;font-size:13px;font-weight:600;color:#1a3a5c">📅 '+d.date+' '+d.dow+' '+d.label+'</div>';
+d.meals.forEach(function(m,mi){var mk=mealKey(di,mi),actual=mealCosts[mk]||'';
+h+='<div class="meal-row"><span class="meal-day">'+d.date.slice(5)+'</span><span class="meal-type">'+m.type+'</span><span class="meal-restaurant">'+m.restaurant;if(m.location)h+=' <a class="location-link" href="'+amapLink(m.restaurant+' '+m.location)+'" target="_blank">🗺️</a>';h+='</span>';
+if(m.dishes)h+='<span class="dish-list" style="flex:2;min-width:200px">📋 预点：'+m.dishes+'</span>';
+if(m.budget>0){h+='<span class="meal-cost">预算 ¥'+m.budget.toLocaleString()+' → 实际 ¥<input type="number" value="'+actual+'" placeholder="输入" onchange="saveMealCost(\''+mk+'\',this.value)" style="width:80px"><button class="btn btn-primary btn-sm" onclick="showInvoice(\''+mk+'\',\''+d.date+'\',\''+m.restaurant.replace(/'/g,'\\\'')+'\',\''+m.type+'\')">🧾开票</button></span>';}
+h+='</div>';});});
+h+='</div>';document.getElementById('panel-2').innerHTML=h;}
+function renderInvoices(){
+var total=0;invoices.forEach(function(inv){total+=Number(inv.amount)||0;});
+var h='<div class="card"><h3>发票汇总</h3><div class="summary-grid">';
+h+='<div class="summary-item"><div class="num">'+invoices.length+'</div><div class="lbl">已开票餐数</div></div>';
+h+='<div class="summary-item"><div class="num">¥'+total.toLocaleString()+'</div><div class="lbl">累计开票金额</div></div>';
+h+='<div class="summary-item"><div class="num">'+(invoices.length?new Set(invoices.map(function(i){return i.date;})).size:0)+'</div><div class="lbl">涉及天数</div></div></div>';
+if(invoices.length>0){h+='<button class="btn btn-success" onclick="exportInvoices()" style="margin-bottom:10px">📥 导出Excel</button>';
+h+='<table><tr><th>日期</th><th>餐别</th><th>餐厅</th><th>金额</th><th>开票时间</th></tr>';
+invoices.forEach(function(inv){h+='<tr><td>'+inv.date+'</td><td>'+inv.mealType+'</td><td>'+inv.restaurant+'</td><td>¥'+Number(inv.amount).toLocaleString()+'</td><td>'+new Date(inv.time).toLocaleString('zh-CN')+'</td></tr>';});
+h+='</table>';}else{h+='<p style="color:#999;font-size:13px;text-align:center;padding:20px">暂无开票记录，请在「用餐管理」中输入实际金额并点击开票</p>';}
+h+='</div>';document.getElementById('panel-3').innerHTML=h;}
+function renderNotifications(){
+var h='<div class="card"><h3>每日群通知文案生成</h3><p style="font-size:12px;color:#999;margin-bottom:12px">选择日期生成通知，一键复制发送到企业微信群（群机器人不支持@all，建议手动补充@所有人）</p>';
+days.forEach(function(d,i){h+='<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:600;margin-bottom:4px">📅 '+d.date+' '+d.dow+' '+d.label+'</div>';
+h+='<div class="notification-box">'+genNotify(d,i)+'<button class="btn btn-sm copy-btn" onclick="copyText(this)">📋复制</button></div></div>';});
+h+='</div>';document.getElementById('panel-4').innerHTML=h;}
+function genNotify(d,idx){
+var m='';if(idx===0){m='【出发提醒】🚄\n\n各位同事，明天8月9日我们出发啦！\n\n📅 集合时间：8:30\n📍 集合地点：北京丰台站 31B检票口\n🚄 车次：G683 12:38→太原南站 15:45\n🚌 到达后大巴接站→兰欧国际酒店\n\n⚠️ 必带物品：身份证、手机、充电器\n🌤️ 太原天气：请查看天气预报\n\n如有问题请联系 Ariel！';}
+else if(idx===1||idx===2){m='【培训提醒】📚\n\n各位同事，今天是8月'+(idx===1?'10':'11')+'日培训日，地点：兰欧国际酒店会议室。\n\n请准时参加，具体日程见群内培训安排表。\n\n午餐：酒店自助餐\n晚餐：'+(idx===1?'自由用餐（推荐食品街/柳巷）':'御河伍号（水西关店）18:30')+'\n\n如有问题请联系 Ariel！';}
+else if(idx===10){m='【返程提醒】🔙\n\n各位同事，今天是返程日！\n\n📅 7:30 集合出发 → 郑州东站\n🚄 北京同事：G374 9:03→北京西站 11:30\n🚌 11:40 北京西站接站→送回公司\n✈️ 外地同事：请留意各自返程车次/航班\n\n⚠️ 退房前检查：身份证、手机、充电器、个人物品\n\n祝大家一路平安！到家后在群里报个平安 🙏';}
+else{var dl={'3':'12','4':'13','5':'14','6':'15','7':'16','8':'17','9':'18'};m='【今日行程】🏔️ 8月'+dl[idx]+'日\n\n'+d.detail.split('\n').map(function(l){return '📍 '+l;}).join('\n')+'\n\n';if(d.hotel&&d.hotel!=='-'){m+='🏨 今晚入住：'+d.hotel+'\n📌 '+d.hotelAddr+'\n';}if(d.meals.length){d.meals.forEach(function(ml){m+='\n🍽️ '+ml.type+'餐：'+ml.restaurant+' ('+ml.time+')';});}m+='\n\n⚠️ 注意防晒/补水，听从导游安排！\n如有问题请联系 Ariel！';}return m;}
+function renderPeople(){
+var h='<div class="card"><h3>火车票名单</h3>';
+h+='<div style="margin-bottom:16px"><b>去程：8月9日 '+trainOut.from+' → '+trainOut.to+'</b><br>车次：'+trainOut.train+' '+trainOut.time+' | 检票口：'+trainOut.gate+' | '+trainOut.car+'<br>人数：'+trainOut.people.length+'人<br>';
+h+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">';trainOut.people.forEach(function(p){h+='<span class="tag train">'+p+'</span>';});h+='</div></div>';
+h+='<div style="margin-bottom:16px"><b>返程：8月19日 '+trainBack.from+' → '+trainBack.to+'</b><br>车次：'+trainBack.train+' '+trainBack.time+'<br>人数：'+trainBack.people.length+'人<br>';
+h+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">';trainBack.people.forEach(function(p){h+='<span class="tag train">'+p+'</span>';});h+='</div></div></div>';
+h+='<div class="card"><h3>住宿名单（8/9-8/12 太原）</h3><div style="display:flex;gap:20px;flex-wrap:wrap">';
+h+='<div><b>男士（12间）</b><br>'+hotelRooms.men.map(function(r,i){return (i+1)+'. '+r;}).join('<br>')+'</div>';
+h+='<div><b>女士（4间）</b><br>'+hotelRooms.women.map(function(r,i){return (i+1)+'. '+r;}).join('<br>')+'</div></div></div>';
+document.getElementById('panel-5').innerHTML=h;}
+function switchTab(idx){document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});document.querySelectorAll('.panel').forEach(function(p,i){p.classList.toggle('active',i===idx);});}
+function toggleTask(id){var t=tasks.find(function(t){return t.id===id;});if(t){t.done=!t.done;saveTasks();renderTasks();updateBadge();if(t.done){showToast('✅ 任务已完成');if(navigator.vibrate)navigator.vibrate(50);}}}
+function toggleNotify(){notifyOn=!notifyOn;saveNotify();renderTasks();if(notifyOn&&Notification.permission==='default'){Notification.requestPermission();}}
+function saveMealCost(key,val){if(val)mealCosts[key]=val;else delete mealCosts[key];saveMealCosts();renderOverview();}
+function showInvoice(mk,date,restaurant,mealType){
+var amount=mealCosts[mk]||'0';
+var popup=document.getElementById('invoicePopup');
+popup.innerHTML='<h3>🧾 开票信息</h3><div class="field"><div class="label">公司名称</div><div class="value">'+C.name+'</div></div><div class="field"><div class="label">纳税人识别号</div><div class="value">'+C.taxId+'</div></div><div class="field"><div class="label">电子发票接收邮箱</div><div class="value">'+C.email+'</div></div><div class="field"><div class="label">开票金额</div><div class="value" style="font-size:20px;font-weight:700;color:#1a3a5c">¥'+Number(amount).toLocaleString()+'</div></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-primary" onclick="copyInvoice()">📋 一键复制开票信息</button><button class="btn btn-success" onclick="confirmInvoice(\''+mk+'\',\''+date+'\',\''+restaurant.replace(/'/g,'\\\'')+'\',\''+mealType+'\',\''+amount+'\')">✅ 确认已开票</button><button class="btn" onclick="closeInvoice()">关闭</button></div>';
+document.getElementById('overlay').style.display='block';popup.style.display='block';}
+function closeInvoice(){document.getElementById('overlay').style.display='none';document.getElementById('invoicePopup').style.display='none';}
+function copyInvoice(){navigator.clipboard.writeText('公司名称：'+C.name+'\n纳税人识别号：'+C.taxId+'\n邮箱：'+C.email).then(function(){alert('开票信息已复制到剪贴板！可直接粘贴给餐厅');});}
+function confirmInvoice(mk,date,restaurant,mealType,amount){invoices.push({mk:mk,date:date,restaurant:restaurant,mealType:mealType,amount:Number(amount),time:new Date().toISOString()});saveInvoices();closeInvoice();renderInvoices();alert('已记录开票！');}
+function copyText(btn){var box=btn.parentElement,text=box.textContent.replace('📋复制','').trim();navigator.clipboard.writeText(text).then(function(){btn.textContent='✅已复制';setTimeout(function(){btn.textContent='📋复制';},2000);});}
+function exportInvoices(){
+var data=[['日期','餐别','餐厅','金额','开票时间','公司名称','纳税人识别号','邮箱']];
+invoices.forEach(function(inv){data.push([inv.date,inv.mealType,inv.restaurant,inv.amount,new Date(inv.time).toLocaleString('zh-CN'),C.name,C.taxId,C.email]);});
+var total=invoices.reduce(function(s,inv){return s+Number(inv.amount);},0);data.push(['','','合计',total,'','','','']);
+var ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:12},{wch:8},{wch:30},{wch:12},{wch:20},{wch:40},{wch:25},{wch:30}];
+var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'发票汇总');XLSX.writeFile(wb,'诺达思2026SummerOuting_发票汇总.xlsx');}
+function checkNotify(){
+if(!notifyOn)return;if(Notification.permission==='default'){Notification.requestPermission();}
+if(Notification.permission!=='granted')return;
+var today=getToday(),now=new Date(),hour=now.getHours();
+if(hour<8||hour>20)return;
+tasks.forEach(function(t){
+if(t.done||t.notified||t.date!==today)return;
+t.notified=true;saveTasks();
+try{new Notification('⏰ 活动提醒',{body:t.title+'\n'+t.detail,icon:'🏔️'});}catch(e){}
+});}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2000);}
+function updateBadge(){var today=getToday(),cnt=tasks.filter(function(t){return t.date===today&&!t.done;}).length;var b=document.getElementById('taskBadge');if(b){b.style.display=cnt>0?'inline':'none';b.textContent=cnt;}}
+function installApp(){if(window.deferredPrompt){window.deferredPrompt.prompt();window.deferredPrompt.userChoice.then(function(r){if(r.outcome==='accepted'){document.getElementById('installBanner').classList.remove('show');showToast('📲 已添加到主屏幕');}window.deferredPrompt=null;});}else{showToast('📲 请使用浏览器菜单中的"添加到主屏幕"功能');}}
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.deferredPrompt=e;document.getElementById('installBanner').classList.add('show');});
+window.addEventListener('appinstalled',function(){document.getElementById('installBanner').classList.remove('show');showToast('✅ 应用已安装！');});
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').then(function(){console.log('SW registered');}).catch(function(){console.log('SW failed');});}
+renderAll();
+setInterval(function(){document.getElementById('countdown').textContent=countdownStr();checkNotify();updateBadge();},30000);
+</script>
+</body>
+</html>

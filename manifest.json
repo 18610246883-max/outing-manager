@@ -1,0 +1,20 @@
+﻿{
+  "name": "诺达思 2026 Summer Outing",
+  "short_name": "Outing管理",
+  "description": "诺达思 2026 山西团建管理工具 - 行程、任务、用餐、发票一站式管理",
+  "start_url": "./outing-manager.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1a3a5c",
+  "theme_color": "#1a3a5c",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231a3a5c%22/><text x=%2250%25%22 y=%2255%25%22 text-anchor=%22middle%22 dy=%22.1em%22 fill=%22white%22 font-size=%2245%22>🏔️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
