@@ -448,7 +448,7 @@ h+='<tr><td></td><td><input value="'+d.name+'" onchange="editMenuItem(\''+key+'\
 });
 h+='</tbody></table></div>';
 h+='<div class="menu-totals"><div style="font-size:14px;font-weight:600">一桌合计，'+md.dishes.length+'个菜，¥'+total.toLocaleString()+'</div><div style="font-size:16px;font-weight:700;color:#1a3a5c">总价（'+md.tables+'桌）：¥'+grandTotal.toLocaleString()+'</div><div style="font-size:13px;color:#666">人均：¥'+perPerson+'</div></div>';
-h+='<div style="margin-top:8px;display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="addMenuItem(\''+key+'\')">+ 添加菜品</button><button class="btn btn-sm" onclick="closeMenu()">关闭</button></div>';
+h+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e8e8e8"><div style="font-size:13px;font-weight:600;margin-bottom:8px">➕ 添加菜品</div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end"><select id="newDishCat" style="padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;font-family:inherit"><option value="凉">凉菜</option><option value="肉">肉菜</option><option value="素">素菜</option><option value="主食">主食</option><option value="汤">汤</option><option value="饮料">饮料</option><option value="其他">其他</option></select><input id="newDishName" placeholder="菜品名称" style="padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;width:140px;font-family:inherit"><input id="newDishPrice" type="number" placeholder="单价" style="padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;width:70px;font-family:inherit"><button class="btn btn-primary" onclick="addMenuItem(\''+key+'\')">确定添加</button></div></div><button class="btn btn-sm" onclick="closeMenu()" style="margin-top:8px;width:100%">关闭</button>';
 h+='</div></div>';
 document.getElementById('overlay').style.display='block';
 var popup=document.getElementById('menuPopup');
@@ -474,11 +474,10 @@ var mt=key.indexOf('lunch')>=0?'午':'晚';
 showMenu(d,mt,'');
 }
 function addMenuItem(key){
-var cat=prompt('请输入类别（凉/肉/素/主食/汤/饮料/其他）：','凉');
-if(!cat)return;
-var name=prompt('请输入菜品名称：');
-if(!name)return;
-var price=Number(prompt('请输入单价：','0'));
+var cat=document.getElementById('newDishCat').value;
+var name=document.getElementById('newDishName').value.trim();
+var price=Number(document.getElementById('newDishPrice').value);
+if(!name||!price){showToast('请填写菜品名称和单价');return;}
 if(!menuEdits[key])menuEdits[key]={};
 if(!menuEdits[key].added)menuEdits[key].added=[];
 menuEdits[key].added.push({cat:cat,name:name,price:price});
