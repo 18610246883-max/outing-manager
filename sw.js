@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = 'outing-manager-v1';
+const CACHE_NAME = 'outing-manager-v2';
 const ASSETS = [
   './outing-manager.html',
   './manifest.json',
