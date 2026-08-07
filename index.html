@@ -440,14 +440,14 @@ var cats={'凉':'凉菜','肉':'肉菜','素':'素菜','主食':'主食','汤':'
 Object.keys(cats).forEach(function(cat){
 var items=md.dishes.filter(function(d){return d.cat===cat;});
 if(items.length===0)return;
-h+='<tr><td colspan="4" style="background:#f5f7fa;font-weight:600;font-size:12px;color:#1a3a5c">'+cats[cat]+'</td></tr>';
+h+='<tr><td colspan="4" style="background:#f5f7fa;font-weight:600;font-size:12px;color:#1a3a5c">'+cats[cat]+'（'+items.length+'）</td></tr>';
 items.forEach(function(d,i){
 var globalIdx=md.dishes.indexOf(d);
 h+='<tr><td></td><td><input value="'+d.name+'" onchange="editMenuItem(\''+key+'\','+globalIdx+',\'name\',this.value)" style="border:none;background:transparent;width:100%;font-size:13px;font-family:inherit"></td><td><input type="number" value="'+d.price+'" onchange="editMenuItem(\''+key+'\','+globalIdx+',\'price\',Number(this.value))" style="width:60px;padding:2px 4px;border:1px solid #e8e8e8;border-radius:4px;font-size:12px;text-align:right;font-family:inherit"></td><td><button class="btn btn-sm" onclick="removeMenuItem(\''+key+'\','+globalIdx+')" style="color:#ff4d4f">✕</button></td></tr>';
 });
 });
 h+='</tbody></table></div>';
-h+='<div class="menu-totals"><div style="font-size:14px;font-weight:600">一桌合计：¥'+total.toLocaleString()+'</div><div style="font-size:16px;font-weight:700;color:#1a3a5c">总价（'+md.tables+'桌）：¥'+grandTotal.toLocaleString()+'</div><div style="font-size:13px;color:#666">人均：¥'+perPerson+'</div></div>';
+h+='<div class="menu-totals"><div style="font-size:14px;font-weight:600">一桌合计，'+md.dishes.length+'个菜，¥'+total.toLocaleString()+'</div><div style="font-size:16px;font-weight:700;color:#1a3a5c">总价（'+md.tables+'桌）：¥'+grandTotal.toLocaleString()+'</div><div style="font-size:13px;color:#666">人均：¥'+perPerson+'</div></div>';
 h+='<div style="margin-top:8px;display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="addMenuItem(\''+key+'\')">+ 添加菜品</button><button class="btn btn-sm" onclick="closeMenu()">关闭</button></div>';
 h+='</div></div>';
 document.getElementById('overlay').style.display='block';
