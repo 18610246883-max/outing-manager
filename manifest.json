@@ -2,7 +2,7 @@
   "name": "诺达思 2026 Summer Outing",
   "short_name": "Outing管理",
   "description": "诺达思 2026 山西团建管理工具 - 行程、任务、用餐、发票一站式管理",
-  "start_url": "./",
+  "start_url": "./?v=4",
   "scope": "/outing-manager/",
   "display": "standalone",
   "orientation": "portrait-primary",
