@@ -138,6 +138,31 @@ th{background:#f5f7fa;font-weight:500}
 .menu-dishes td,.menu-dishes th{padding:4px 6px;border-bottom:1px solid #f0f0f0}
 .menu-totals{padding:10px;background:#f5f7fa;border-radius:8px;margin-top:10px;text-align:center}
 
+
+.sync-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center}
+.sync-overlay.show{display:flex}
+.sync-modal{background:#fff;border-radius:16px;padding:28px 24px;width:90%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.sync-modal h2{font-size:18px;color:#1a3a5c;margin-bottom:4px;text-align:center}
+.sync-modal .sub{font-size:12px;color:#999;margin-bottom:18px;text-align:center}
+.sync-modal .field{margin-bottom:12px}
+.sync-modal .field label{display:block;font-size:12px;color:#666;margin-bottom:4px;font-weight:500}
+.sync-modal .field input{width:100%;padding:10px 12px;border:2px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border 0.2s}
+.sync-modal .field input:focus{border-color:#1a3a5c}
+.sync-modal .field .hint{font-size:11px;color:#999;margin-top:3px}
+.sync-btn-row{display:flex;gap:8px;margin-top:16px}
+.sync-btn-row button{flex:1;padding:10px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:opacity 0.2s}
+.sync-btn-row button:active{opacity:0.8}
+.sync-btn-upload{background:#1a3a5c;color:#fff}
+.sync-btn-download{background:#52c41a;color:#fff}
+.sync-btn-close{background:#f5f5f5;color:#666}
+.sync-status{font-size:12px;text-align:center;margin-top:10px;min-height:18px;color:#999}
+.sync-status.success{color:#52c41a}
+.sync-status.error{color:#ff4d4f}
+.sync-status.loading{color:#1a3a5c}
+.header-sync-btn{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;font-family:inherit;transition:background 0.2s;white-space:nowrap;display:flex;align-items:center;gap:4px}
+.header-sync-btn:hover{background:rgba(255,255,255,0.25)}
+.header-sync-btn.syncing{opacity:0.6;pointer-events:none}
+
 </style>
 </head>
 <body>
@@ -152,10 +177,35 @@ th{background:#f5f7fa;font-weight:500}
 <button class="btn-login" onclick="checkLogin()">进入</button>
 </div>
 </div>
+
+<!-- 云端同步弹窗 -->
+<div class="sync-overlay" id="syncOverlay">
+<div class="sync-modal">
+<h2>☁️ 云端同步</h2>
+<div class="sub">数据加密后存储到 GitHub Gist，只有你的密码能解密</div>
+<div class="field">
+<label>GitHub Personal Access Token</label>
+<input type="password" id="syncToken" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
+<div class="hint">需要 <b>gist</b> 权限。在 GitHub Settings &rarr; Developer settings &rarr; Personal access tokens &rarr; Tokens (classic) 生成</div>
+</div>
+<div class="field">
+<label>同步密码（加密密钥）</label>
+<input type="password" id="syncPassword" placeholder="设置一个强密码" autocomplete="off">
+<div class="hint">⚠️ 务必牢记！密码丢失 = 数据永久无法解密</div>
+</div>
+<div class="sync-btn-row">
+<button class="sync-btn-upload" onclick="syncUpload()">📤 上传到云端</button>
+<button class="sync-btn-download" onclick="syncDownload()">📥 从云端恢复</button>
+</div>
+<button class="sync-btn-close" style="width:100%;margin-top:6px" onclick="closeSync()">取消</button>
+<div class="sync-status" id="syncStatus"></div>
+</div>
+</div>
+
 <div class="header">
 <div><h1>诺达思 2026 Summer Outing · 山西</h1>
 <div style="font-size:12px;opacity:0.8;margin-top:4px">8月9日-19日 | 北京→太原→郑州 | 约30人</div></div>
-<div class="cd" id="countdown">加载中...</div>
+<div style="display:flex;align-items:center;gap:8px"><button class="header-sync-btn" id="headerSyncBtn" onclick="openSync()" title="云端同步">☁️ 同步</button><div class="cd" id="countdown">加载中...</div></div>
 </div>
 <div class="install-banner" id="installBanner"><span>📲</span><span style="flex:1">添加到手机主屏幕，随时随地管理团建</span><button class="ib-btn" onclick="installApp()">立即添加</button><button class="ib-close" onclick="document.getElementById('installBanner').classList.remove('show')">&times;</button></div>
 <div class="tabs desktop-tabs">
@@ -740,6 +790,163 @@ if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=5')
 async function sha256(str){var buf=new TextEncoder().encode(str);var hash=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');}
 function checkLogin(){var pwd=document.getElementById('loginPwd').value;sha256(pwd).then(function(h){if(h==='c64ddde4d1280e7f497d72d52e6456affab1625bf7f2adee6ebf6e7f43a51b4f'){document.getElementById('loginOverlay').classList.add('hidden');document.getElementById('loginPwd').value='';}else{document.getElementById('loginErr').style.display='block';document.getElementById('loginPwd').value='';}});}
 document.getElementById('loginPwd').addEventListener('keydown',function(e){if(e.key==='Enter')checkLogin();});
+// ========== 云端同步（加密 Gist） ==========
+var SYNC_DATA_KEYS=["me","ot","oi","om","on"];
+
+function openSync(){
+  var token=localStorage.getItem("_sync_gh_token")||"";
+  document.getElementById("syncToken").value=token;
+  document.getElementById("syncPassword").value="";
+  document.getElementById("syncStatus").textContent="";
+  document.getElementById("syncStatus").className="sync-status";
+  document.getElementById("syncOverlay").classList.add("show");
+}
+
+function closeSync(){
+  document.getElementById("syncOverlay").classList.remove("show");
+}
+
+function setSyncStatus(msg,type){
+  var el=document.getElementById("syncStatus");
+  el.textContent=msg;
+  el.className="sync-status "+type;
+}
+
+async function deriveKey(password,salt){
+  var enc=new TextEncoder();
+  var keyMaterial=await crypto.subtle.importKey("raw",enc.encode(password),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2",salt:salt,iterations:200000,hash:"SHA-256"},
+    keyMaterial,
+    {name:"AES-GCM",length:256},
+    false,
+    ["encrypt","decrypt"]
+  );
+}
+
+async function encryptData(password,plaintext){
+  var salt=crypto.getRandomValues(new Uint8Array(16));
+  var key=await deriveKey(password,salt);
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  var enc=new TextEncoder();
+  var ciphertext=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,enc.encode(plaintext));
+  var buf=new Uint8Array(16+12+new Uint8Array(ciphertext).length);
+  buf.set(salt,0);
+  buf.set(iv,16);
+  buf.set(new Uint8Array(ciphertext),28);
+  return btoa(String.fromCharCode.apply(null,buf));
+}
+
+async function decryptData(password,base64){
+  var raw=Uint8Array.from(atob(base64),function(c){return c.charCodeAt(0);});
+  var salt=raw.slice(0,16);
+  var iv=raw.slice(16,28);
+  var ciphertext=raw.slice(28);
+  var key=await deriveKey(password,salt);
+  var decrypted=await crypto.subtle.decrypt({name:"AES-GCM",iv:iv},key,ciphertext);
+  return new TextDecoder().decode(decrypted);
+}
+
+function getGistId(){return localStorage.getItem("_sync_gist_id")||"";}
+function setGistId(id){localStorage.setItem("_sync_gist_id",id);}
+
+async function gistApi(token,method,path,body){
+  var opts={method:method,headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github.v3+json"}};
+  if(body){opts.headers["Content-Type"]="application/json";opts.body=JSON.stringify(body);}
+  var resp=await fetch("https://api.github.com"+path,opts);
+  if(!resp.ok){var err=await resp.json().catch(function(){return {};});throw new Error(err.message||"HTTP "+resp.status);}
+  return resp.json();
+}
+
+function collectAllData(){
+  var bundle={version:1,time:new Date().toISOString()};
+  SYNC_DATA_KEYS.forEach(function(k){bundle[k]=JSON.parse(localStorage.getItem(k)||"null");});
+  return JSON.stringify(bundle);
+}
+
+function restoreAllData(json){
+  var bundle=JSON.parse(json);
+  SYNC_DATA_KEYS.forEach(function(k){
+    if(bundle.hasOwnProperty(k)){localStorage.setItem(k,JSON.stringify(bundle[k]));}
+  });
+  menuEdits=bundle.me||{};
+  tasks=bundle.ot||generateTasks();
+  invoices=bundle.oi||[];
+  mealCosts=bundle.om||{};
+  notifyOn=typeof bundle.on==="boolean"?bundle.on:true;
+  renderAll();
+  updateBadge();
+  showToast("✅ 数据已从云端恢复");
+}
+
+async function syncUpload(){
+  var token=document.getElementById("syncToken").value.trim();
+  var password=document.getElementById("syncPassword").value;
+  var btn=document.getElementById("headerSyncBtn");
+  if(!token){setSyncStatus("请输入 GitHub Token","error");return;}
+  if(!password||password.length<6){setSyncStatus("同步密码至少 6 位","error");return;}
+  setSyncStatus("正在加密并上传...","loading");
+  btn.classList.add("syncing");
+  try{
+    localStorage.setItem("_sync_gh_token",token);
+    var plaintext=collectAllData();
+    var encrypted=await encryptData(password,plaintext);
+    var gistId=getGistId();
+    var gist;
+    if(gistId){
+      gist=await gistApi(token,"PATCH","/gists/"+gistId,{
+        files:{"outing-data.enc":{content:encrypted}}
+      });
+    }else{
+      gist=await gistApi(token,"POST","/gists",{
+        description:"诺达思 Outing 数据（加密存储）",
+        public:false,
+        files:{"outing-data.enc":{content:encrypted}}
+      });
+      setGistId(gist.id);
+    }
+    setSyncStatus("✅ 上传成功 "+new Date().toLocaleTimeString("zh-CN"),"success");
+    showToast("☁️ 数据已加密上传到云端");
+  }catch(e){
+    setSyncStatus("❌ 上传失败："+e.message,"error");
+  }
+  btn.classList.remove("syncing");
+}
+
+async function syncDownload(){
+  var token=document.getElementById("syncToken").value.trim();
+  var password=document.getElementById("syncPassword").value;
+  var btn=document.getElementById("headerSyncBtn");
+  var gistId=getGistId();
+  if(!token){setSyncStatus("请输入 GitHub Token","error");return;}
+  if(!password||password.length<6){setSyncStatus("同步密码至少 6 位","error");return;}
+  if(!gistId){setSyncStatus("尚未上传过数据，请先上传","error");return;}
+  setSyncStatus("正在下载并解密...","loading");
+  btn.classList.add("syncing");
+  try{
+    localStorage.setItem("_sync_gh_token",token);
+    var gist=await gistApi(token,"GET","/gists/"+gistId);
+    var file=gist.files["outing-data.enc"];
+    if(!file||!file.content){setSyncStatus("未找到云端数据","error");return;}
+    var encrypted=file.content.trim();
+    var plaintext=await decryptData(password,encrypted);
+    restoreAllData(plaintext);
+    setSyncStatus("✅ 恢复成功 "+new Date().toLocaleTimeString("zh-CN"),"success");
+    closeSync();
+  }catch(e){
+    if(e.message.indexOf("decrypt")!==-1||e.message.indexOf("operation")!==-1){
+      setSyncStatus("❌ 密码错误，无法解密","error");
+    }else{
+      setSyncStatus("❌ 下载失败："+e.message,"error");
+    }
+  }
+  btn.classList.remove("syncing");
+}
+
+document.getElementById("syncOverlay").addEventListener("click",function(e){
+  if(e.target===this)closeSync();
+});
+
 
 renderAll();
 setInterval(function(){document.getElementById('countdown').textContent=countdownStr();checkNotify();updateBadge();},30000);
