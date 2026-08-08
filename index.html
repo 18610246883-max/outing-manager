@@ -505,7 +505,7 @@ const restaurantNotify={
 '2026-08-18':{lunch:'@所有人  今天的午餐餐厅：\n\n时间：8月18日12:30\n餐厅：青谷里·农家菜\n包间：大厅4桌',dinner:'@所有人  大家放好行李，18:45在大厅集合，我们一起坐大巴前往餐厅：\n\n时间：8月18日18:45\n餐厅：裕丰源·豫食雅宴\n包间：320、321、322'},
 '2026-08-19':{lunch:'',dinner:''}
 };
-let tasks=JSON.parse(localStorage.getItem('ot')||'null')||generateTasks();
+let tasks=JSON.parse(localStorage.getItem('ot')||'null');if(!tasks){tasks=generateTasks();saveTasks();}
 let invoices=JSON.parse(localStorage.getItem('oi')||'[]');
 let mealCosts=JSON.parse(localStorage.getItem('om')||'{}');
 let notifyOn=JSON.parse(localStorage.getItem('on')||'true');
