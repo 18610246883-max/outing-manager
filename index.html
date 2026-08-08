@@ -162,6 +162,22 @@ th{background:#f5f7fa;font-weight:500}
 .header-sync-btn{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;font-family:inherit;transition:background 0.2s;white-space:nowrap;display:flex;align-items:center;gap:4px}
 .header-sync-btn:hover{background:rgba(255,255,255,0.25)}
 .header-sync-btn.syncing{opacity:0.6;pointer-events:none}
+.header-sync-btn.auto{background:rgba(82,196,26,0.25);border-color:rgba(82,196,26,0.4)}
+.header-sync-btn .sync-dot{width:6px;height:6px;border-radius:50%;background:#52c41a;display:none;margin-right:2px}
+.header-sync-btn .sync-dot.show{display:inline-block}
+.header-sync-btn .sync-dot.error{background:#ff4d4f}
+.auto-sync-toggle{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;font-size:13px;color:#389e0d;cursor:pointer;user-select:none}
+.auto-sync-toggle input{width:16px;height:16px;cursor:pointer}
+.auto-sync-toggle.disabled{background:#f5f5f5;border-color:#e8e8e8;color:#999;pointer-events:none}
+.auto-sync-toggle.disabled input{pointer-events:none}
+.header-sync-btn.auto{background:rgba(82,196,26,0.25);border-color:rgba(82,196,26,0.4)}
+.header-sync-btn .sync-dot{width:6px;height:6px;border-radius:50%;background:#52c41a;display:none;margin-right:2px}
+.header-sync-btn .sync-dot.show{display:inline-block}
+.header-sync-btn .sync-dot.error{background:#ff4d4f}
+.auto-sync-toggle{display:flex;align-items:center;gap:8px;margin-top:12px;padding:10px 12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:8px;font-size:13px;color:#389e0d;cursor:pointer;user-select:none}
+.auto-sync-toggle input{width:16px;height:16px;cursor:pointer}
+.auto-sync-toggle.disabled{background:#f5f5f5;border-color:#e8e8e8;color:#999;pointer-events:none}
+.auto-sync-toggle.disabled input{pointer-events:none}
 
 </style>
 </head>
@@ -193,6 +209,16 @@ th{background:#f5f7fa;font-weight:500}
 <input type="password" id="syncPassword" placeholder="设置一个强密码" autocomplete="off">
 <div class="hint">⚠️ 务必牢记！密码丢失 = 数据永久无法解密</div>
 </div>
+
+<div class="auto-sync-toggle" id="autoSyncToggle" onclick="toggleAutoSync()">
+<input type="checkbox" id="autoSyncCheck">
+<label for="autoSyncCheck" style="cursor:pointer;flex:1">🔄 自动同步（每次修改后自动上传）</label>
+</div>
+
+<div class="auto-sync-toggle" id="autoSyncToggle" onclick="toggleAutoSync()">
+<input type="checkbox" id="autoSyncCheck">
+<label for="autoSyncCheck" style="cursor:pointer;flex:1">🔄 自动同步（每次修改后自动上传）</label>
+</div>
 <div class="sync-btn-row">
 <button class="sync-btn-upload" onclick="syncUpload()">📤 上传到云端</button>
 <button class="sync-btn-download" onclick="syncDownload()">📥 从云端恢复</button>
@@ -205,7 +231,7 @@ th{background:#f5f7fa;font-weight:500}
 <div class="header">
 <div><h1>诺达思 2026 Summer Outing · 山西</h1>
 <div style="font-size:12px;opacity:0.8;margin-top:4px">8月9日-19日 | 北京→太原→郑州 | 约30人</div></div>
-<div style="display:flex;align-items:center;gap:8px"><button class="header-sync-btn" id="headerSyncBtn" onclick="openSync()" title="云端同步">☁️ 同步</button><div class="cd" id="countdown">加载中...</div></div>
+<div style="display:flex;align-items:center;gap:8px"><button class="header-sync-btn" id="headerSyncBtn" onclick="openSync()" title="云端同步"><span class="sync-dot" id="syncDot"></span>☁️ 同步</button><div class="cd" id="countdown">加载中...</div></div>
 </div>
 <div class="install-banner" id="installBanner"><span>📲</span><span style="flex:1">添加到手机主屏幕，随时随地管理团建</span><button class="ib-btn" onclick="installApp()">立即添加</button><button class="ib-close" onclick="document.getElementById('installBanner').classList.remove('show')">&times;</button></div>
 <div class="tabs desktop-tabs">
@@ -460,7 +486,7 @@ const menuData={
 };
 
 let menuEdits=JSON.parse(localStorage.getItem('me')||'{}');
-function saveMenuEdits(){localStorage.setItem('me',JSON.stringify(menuEdits));}
+function saveMenuEdits(){localStorage.setItem('me',JSON.stringify(menuEdits));autoSync();}
 function getMenuData(date,mealType){
 var key=date+'_'+(mealType==='午'?'lunch':'dinner');
 var md=menuData[key]||null;
@@ -602,10 +628,81 @@ add('2026-08-18','晚上：确认明天返程安排','交通','确认G374 9:03�
 add('2026-08-18','晚上：发送返程群通知','通知','7:30集合出发→郑州东站 G374 9:03→北京西11:30，外地同事注意各自返程',19);
 add('2026-08-19','中午：确认全员安全抵达','人员','确认北京同事安全到京，外地同事安全到家，群内报平安');
 return t;}
-function saveTasks(){localStorage.setItem('ot',JSON.stringify(tasks));}
-function saveInvoices(){localStorage.setItem('oi',JSON.stringify(invoices));}
-function saveMealCosts(){localStorage.setItem('om',JSON.stringify(mealCosts));}
+function saveTasks(){localStorage.setItem('ot',JSON.stringify(tasks));autoSync();}
+function saveInvoices(){localStorage.setItem('oi',JSON.stringify(invoices));autoSync();}
+function saveMealCosts(){localStorage.setItem('om',JSON.stringify(mealCosts));autoSync();}
+
 function saveNotify(){localStorage.setItem('on',JSON.stringify(notifyOn));}
+
+var _autoSyncTimer=null;
+function autoSync(){
+  if(localStorage.getItem("_sync_auto")==="0")return;
+  var token=localStorage.getItem("_sync_gh_token");
+  var pwd=localStorage.getItem("_sync_gh_pwd");
+  if(!token||!pwd||pwd.length<6)return;
+  clearTimeout(_autoSyncTimer);
+  _autoSyncTimer=setTimeout(function(){
+    var btn=document.getElementById("headerSyncBtn");
+    btn.classList.add("syncing");
+    updateSyncIndicator("syncing");
+    var plaintext=collectAllData();
+    encryptData(pwd,plaintext).then(function(encrypted){
+      var gistId=getGistId();
+      var body={files:{"outing-data.enc":{content:encrypted}}};
+      if(gistId){
+        return gistApi(token,"PATCH","/gists/"+gistId,body);
+      }else{
+        return gistApi(token,"POST","/gists",{description:"诺达思 Outing 数据（加密存储）",public:false,files:{"outing-data.enc":{content:encrypted}}}).then(function(g){setGistId(g.id);});
+      }
+    }).then(function(){
+      updateSyncIndicator("ok");
+      btn.classList.remove("syncing");
+    }).catch(function(e){
+      updateSyncIndicator("error");
+      btn.classList.remove("syncing");
+      console.log("Auto-sync failed:",e.message);
+    });
+  },3000);
+}
+
+function toggleAutoSync(){
+  var check=document.getElementById("autoSyncCheck");
+  var newVal=!check.checked;
+  check.checked=newVal;
+  localStorage.setItem("_sync_auto",newVal?"1":"0");
+  updateAutoSyncToggle();
+  if(newVal){autoSync();}
+}
+
+function updateAutoSyncToggle(){
+  var el=document.getElementById("autoSyncToggle");
+  var check=document.getElementById("autoSyncCheck");
+  var hasCreds=!!(localStorage.getItem("_sync_gh_token")&&localStorage.getItem("_sync_gh_pwd"));
+  if(!hasCreds){
+    el.classList.add("disabled");
+    check.checked=false;
+  }else{
+    el.classList.remove("disabled");
+  }
+}
+
+function updateSyncIndicator(status){
+  var btn=document.getElementById("headerSyncBtn");
+  var dot=document.getElementById("syncDot");
+  if(!dot)return;
+  dot.className="sync-dot";
+  if(status==="ok"){
+    dot.classList.add("show");
+    btn.classList.add("auto");
+    setTimeout(function(){dot.classList.remove("show");btn.classList.remove("auto");},5000);
+  }else if(status==="error"){
+    dot.classList.add("show","error");
+    btn.classList.remove("auto");
+  }else if(status==="syncing"){
+    dot.classList.add("show");
+    btn.classList.remove("auto");
+  }
+}
 function fmtDate(d){return new Date(d).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'});}
 function fullDate(d){return new Date(d).toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'});}
 function amapLink(k){return 'https://uri.amap.com/search?keyword='+encodeURIComponent(k)+'&callnative=1';}
@@ -795,8 +892,12 @@ var SYNC_DATA_KEYS=["me","ot","oi","om","on"];
 
 function openSync(){
   var token=localStorage.getItem("_sync_gh_token")||"";
+  var pwd=localStorage.getItem("_sync_gh_pwd")||"";
+  var autoOn=localStorage.getItem("_sync_auto")!=="0";
   document.getElementById("syncToken").value=token;
-  document.getElementById("syncPassword").value="";
+  document.getElementById("syncPassword").value=pwd;
+  document.getElementById("autoSyncCheck").checked=autoOn;
+  updateAutoSyncToggle();
   document.getElementById("syncStatus").textContent="";
   document.getElementById("syncStatus").className="sync-status";
   document.getElementById("syncOverlay").classList.add("show");
@@ -889,6 +990,8 @@ async function syncUpload(){
   btn.classList.add("syncing");
   try{
     localStorage.setItem("_sync_gh_token",token);
+    localStorage.setItem("_sync_gh_pwd",password);
+    localStorage.setItem("_sync_gh_pwd",password);
     var plaintext=collectAllData();
     var encrypted=await encryptData(password,plaintext);
     var gistId=getGistId();
@@ -906,9 +1009,11 @@ async function syncUpload(){
       setGistId(gist.id);
     }
     setSyncStatus("✅ 上传成功 "+new Date().toLocaleTimeString("zh-CN"),"success");
+    updateSyncIndicator("ok");
     showToast("☁️ 数据已加密上传到云端");
   }catch(e){
     setSyncStatus("❌ 上传失败："+e.message,"error");
+    updateSyncIndicator("error");
   }
   btn.classList.remove("syncing");
 }
