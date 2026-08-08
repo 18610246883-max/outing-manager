@@ -1,4 +1,4 @@
-const CACHE_NAME = 'outing-v5';
+const CACHE_NAME = 'outing-v6';
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))));
   self.skipWaiting();
