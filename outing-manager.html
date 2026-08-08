@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231a3a5c%22/><text x=%2250%25%22 y=%2255%25%22 text-anchor=%22middle%22 dy=%22.1em%22 fill=%22white%22 font-size=%2245%22>🏔️</text></svg>">
 <title>诺达思 2026 Summer Outing</title>
-<link rel="manifest" href="./manifest.json?v=3">
+<link rel="manifest" href="./manifest.json?v=5">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -735,7 +735,7 @@ function updateBadge(){var today=getToday(),cnt=tasks.filter(function(t){return 
 function installApp(){if(window.deferredPrompt){window.deferredPrompt.prompt();window.deferredPrompt.userChoice.then(function(r){if(r.outcome==='accepted'){document.getElementById('installBanner').classList.remove('show');showToast('📲 已添加到主屏幕');}window.deferredPrompt=null;});}else{showToast('📲 请使用浏览器菜单中的"添加到主屏幕"功能');}}
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.deferredPrompt=e;document.getElementById('installBanner').classList.add('show');});
 window.addEventListener('appinstalled',function(){document.getElementById('installBanner').classList.remove('show');showToast('✅ 应用已安装！');});
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=3').then(function(){console.log('SW registered');}).catch(function(){console.log('SW failed');});}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js?v=5').then(function(){console.log('SW registered');}).catch(function(){console.log('SW failed');});}
 
 async function sha256(str){var buf=new TextEncoder().encode(str);var hash=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');}
 function checkLogin(){var pwd=document.getElementById('loginPwd').value;sha256(pwd).then(function(h){if(h==='c64ddde4d1280e7f497d72d52e6456affab1625bf7f2adee6ebf6e7f43a51b4f'){document.getElementById('loginOverlay').classList.add('hidden');document.getElementById('loginPwd').value='';}else{document.getElementById('loginErr').style.display='block';document.getElementById('loginPwd').value='';}});}
