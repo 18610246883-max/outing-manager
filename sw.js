@@ -1,6 +1,6 @@
 const CACHE_NAME = 'outing-manager-v2';
 const ASSETS = [
-  './outing-manager.html',
+  './index.html',
   './manifest.json',
   'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js'
 ];
